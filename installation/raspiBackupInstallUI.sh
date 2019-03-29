@@ -1931,8 +1931,10 @@ function config_services_do() {
 	done
 
 	local d="$(getMessageText $DESCRIPTION_STARTSTOP_SERVICES)"
+	local c1="$(getMessageText $BUTTON_CANCEL)"
+	local o1="$(getMessageText $BUTTON_OK)"
 
-	ANSWER=$(whiptail --notags --checklist "$d" --title "${tt[1]}" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
+	ANSWER=$(whiptail --notags --checklist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
 		"${cl[@]}" \
 		3>&1 1>&2 2>&3)
 	if [ $? -eq 0 ]; then
@@ -1980,8 +1982,10 @@ function config_service_sequence_do() {
 
 			local d="$(getMessageText $DESCRIPTION_STARTSTOP_SEQUENCE)"
 			local tt="$(getMessageText $TITLE_INFORMATION)"
+			local c1="$(getMessageText $BUTTON_CANCEL)"
+			local o1="$(getMessageText $BUTTON_OK)"
 
-			ANSWER=$(whiptail --notags --radiolist "$d" --title "$tt" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
+			ANSWER=$(whiptail --notags --radiolist "$d" --title "$tt" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
 				"${sl[@]}" \
 				3>&1 1>&2 2>&3)
 			if [ $? -eq 0 ]; then
