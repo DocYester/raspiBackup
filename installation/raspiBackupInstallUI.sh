@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-03-25 19:50:38 +0100$"
+GIT_DATE="$Date: 2019-03-29 19:50:37 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: 76e4f12$"
+GIT_COMMIT="$Sha1: 6cd9a27$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -243,8 +243,8 @@ MSG_QUESTION_UPDATE_CONFIG=$((SCNT++))
 MSG_EN[$MSG_QUESTION_UPDATE_CONFIG]="Do you want to save the updated $RASPIBACKUP_NAME configuration now?"
 MSG_DE[$MSG_QUESTION_UPDATE_CONFIG]="Soll die geänderte Konfiguration von $RASPIBACKUP_NAME jetzt gespeichert werden?"
 MSG_QUESTION_IGNORE_MISSING_STARTSTOP=$((SCNT++))
-MSG_EN[$MSG_QUESTION_IGNORE_MISSING_STARTSTOP]="There are no services stopped before starting the backup. WARNING: Inconsistent backups may be created with $RASPIBACKUP_NAME. Are you sure?"
-MSG_DE[$MSG_QUESTION_IGNORE_MISSING_STARTSTOP]="Es werden keine Services vor dem Start des Backups gestoppt. WARNUNG: Dadurch können inkonsistente Backups mit $RASPIBACKUP_NAME entstehen. Ist das gewünscht?"
+MSG_EN[$MSG_QUESTION_IGNORE_MISSING_STARTSTOP]="There are no services stopped before starting the backup.${NL}WARNING${NL}Inconsistent backups may be created with $RASPIBACKUP_NAME.${NL}Are you sure?"
+MSG_DE[$MSG_QUESTION_IGNORE_MISSING_STARTSTOP]="Es werden keine Services vor dem Start des Backups gestoppt.${NL}WARNUNG${NL}Dadurch können inkonsistente Backups mit $RASPIBACKUP_NAME entstehen.${NL}Ist das beabsichtigt?"
 MSG_QUESTION_UPDATE_CRON=$((SCNT++))
 MSG_EN[$MSG_QUESTION_UPDATE_CRON]="Do you want to save the updated cron settings for $RASPIBACKUP_NAME now?"
 MSG_DE[$MSG_QUESTION_UPDATE_CRON]="Soll die geänderte cron Konfiguration für $RASPIBACKUP_NAME jetzt gespeichert werden?"
@@ -362,7 +362,7 @@ Die aktuelle Reihenfolge wird von oben nach unten angezeigt. \
 Weitere Details finden sich auf https://www.linux-tips-and-tricks.de/de/faq#a18."
 DESCRIPTION_STARTSTOP_SERVICES=$((SCNT++))
 MSG_EN[$DESCRIPTION_STARTSTOP_SERVICES]="${NL}Select all services in sequence how they should be stopped before the backup starts. \
-Current sequence is is displayed.\
+Current sequence is displayed.\
 They will be started in reverse sequence again when the backup finished."
 MSG_DE[$DESCRIPTION_STARTSTOP_SERVICES]="${NL}Wähle alle wichtigen Services aus die vor dem Backup gestoppt werden sollen. \
 Sie werden wieder in umgekehrter Reihenfolge gestartet wenn der Backup beendet wurde."
@@ -1131,7 +1131,7 @@ function getActiveServices() {
 				as+=" $(sed 's/.service//' <<< "$s")"
 			fi
 		fi
-	done < <(systemctl list-units --type=service --state=active)
+	done < <(systemctl list-units --type=service --state=active | grep -v "@")
 	echo "$as"
 	logExit "$as"
 }
