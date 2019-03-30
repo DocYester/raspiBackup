@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 #######################################################################################################################
 #
-# 	Script to download, install, configure and uninstall raspiBackup.sh using windows.
-# 	Use option -h to get a list of all unattended installation options.
+# Script to download, install, configure and uninstall raspiBackup.sh using windows.
+# Commandline installation is also possible. Use option -h to get a list of all options.
 #
-# 	Visit http://www.linux-tips-and-tricks.de/raspiBackup for latest code and other details
+# Visit http://www.linux-tips-and-tricks.de/raspiBackup for latest code and other details
 #
 #######################################################################################################################
 #
-#   Copyright (C) 2015-2019 framp at linux-tips-and-tricks dot de
+#    Copyright (C) 2015-2019 framp at linux-tips-and-tricks dot de
 #
-#   This program is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
-#   (at your option) any later version.
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
 #
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #######################################################################################################################
 
@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-03-29 19:50:37 +0100$"
+GIT_DATE="$Date: 2019-03-29 21:20:15 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: 6cd9a27$"
+GIT_COMMIT="$Sha1: 83fbe50$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -249,10 +249,8 @@ MSG_QUESTION_UPDATE_CRON=$((SCNT++))
 MSG_EN[$MSG_QUESTION_UPDATE_CRON]="Do you want to save the updated cron settings for $RASPIBACKUP_NAME now?"
 MSG_DE[$MSG_QUESTION_UPDATE_CRON]="Soll die geänderte cron Konfiguration für $RASPIBACKUP_NAME jetzt gespeichert werden?"
 MSG_SEQUENCE_OK=$((SCNT++))
-MSG_EN[$MSG_SEQUENCE_OK]="Stopcommands executed${NL}%1${NL}\
-Startcommands will be executed in reverse sequence. Sequence OK?"
-MSG_DE[$MSG_SEQUENCE_OK]="Ausgeführte Stopbefehle${NL}%1${NL}\
-Startbefehle werden umgekehrt ausgeführt. Reihenfolge OK?"
+MSG_EN[$MSG_SEQUENCE_OK]="Stopcommands for services will be executed in following sequence. Startcommands will be executed in reverse sequence. Sequence OK?"
+MSG_DE[$MSG_SEQUENCE_OK]="Stopbefehle für die Services werden in folgender Reihenfolge ausgeführt. Startbefehle werden umgekehrt ausgeführt. Ist die Reihenfolge richtig?"
 BUTTON_YES=$((SCNT++))
 MSG_EN[$BUTTON_YES]="Yes"
 MSG_DE[$BUTTON_YES]="Ja"
@@ -2012,20 +2010,37 @@ function config_service_sequence_do() {
 		pline=$(sed 's/\&/\\\&/g' <<< "$pline")
 		sline=$(sed 's/\&/\\\&/g' <<< "$sline")
 
-		local m="$(getMessageText $MSG_SEQUENCE_OK "$pline")"
+		logItem "Commands: $pline"
+
+		local tl=()
+		local i=1
+		for t in ${tgt[@]}; do
+			if [[ "$wtv" < "0.52.19" ]]; then	# workaround for whiptail issue in 0.52.19
+				tl+=("$i: $t" "" "on")
+			else
+				tl+=("$i: $t" "$i: $t" "on")
+			fi
+			(( i++ ))
+		done
+
+		local m="$(getMessageText $MSG_SEQUENCE_OK)"
 		local t=$(center $(( $WINDOW_COLS*2 )) "$m")
 		local y="$(getMessageText $BUTTON_YES)"
 		local n="$(getMessageText $BUTTON_NO)"
 		local tt="$(getMessageText $TITLE_CONFIRM)"
 
-		if whiptail --yesno "$t" --title "$tt" --yes-button "$y" --no-button "$n" $ROWS_MSGBOX $(( $WINDOW_COLS*2 )) 1; then
+		ANSWER=$(whiptail --notags --checklist "$m" --title "$tt" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
+			"${tl[@]}" \
+			3>&1 1>&2 2>&3)
+		if [ $? -eq 0 ]; then
+			logItem "Answer: $ANSWER"
 			CONFIG_STOPSERVICES="${tgt[@]}"
-			logExit "$CONFIG_STOPSERVICES"
-			return 0
-		else
-			logItem "no selected"
+			break
 		fi
+
 	done
+
+	logExit "$CONFIG_STOPSERVICES"
 }
 
 function config_cronday_do() {
