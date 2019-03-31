@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-03-29 21:20:15 +0100$"
+GIT_DATE="$Date: 2019-03-31 12:56:56 +0200$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: 83fbe50$"
+GIT_COMMIT="$Sha1: 20cedb5$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -430,14 +430,14 @@ MSG_LOCAL_BACKUPPATH=$((SCNT++))
 MSG_EN[$MSG_LOCAL_BACKUPPATH]="Backup would be stored on SD card"
 MSG_DE[$MSG_LOCAL_BACKUPPATH]="Backup würde auf der SD Karte gespeichert werden"
 MSG_NAVIGATION=$((SCNT++))
-MSG_EN[$MSG_NAVIGATION]="Cursor keys: Move cursor to next menu or list item${NL}\
+MSG_EN[$MSG_NAVIGATION]="Cursor keys: Move cursor to next menu item, list item or button${NL}\
 Space key: Select/unselect items in a selection list${NL}\
 Tab key: Jump to buttons at the bottom${NL}\
 ${NL}\
 Pfeiltasten: Bewege Schreibmarke in einem Menu oder einer Liste${NL}\
 Leertaste: Selektiere/Deselektieren Einträge in einer Auswahliste${NL}\
 Tab Taste: Springe zu den unteren Auswahlknöpfen"
-MSG_DE[$MSG_NAVIGATION]="Pfeiltasten: Bewege Schreibmarke in einem Menu oder einer Liste${NL}\
+MSG_DE[$MSG_NAVIGATION]="Pfeiltasten: Bewege Schreibmarke zur nächsten Auswahl in einem Menu, einer Liste oder Auswahlknopf${NL}\
 Leertaste: Selektiere/Deselektieren Einträge in einer Auswahliste${NL}\
 Tab Taste: Springe zu den unteren Auswahlknöpfen${NL}\
 ${NL}\
@@ -549,9 +549,6 @@ MENU_DE[$MENU_CONFIG_TYPE]='"C4" "Backup Typ"'
 MENU_CONFIG_MODE=$((MCNT++))
 MENU_EN[$MENU_CONFIG_MODE]='"C5" "Backup mode"'
 MENU_DE[$MENU_CONFIG_MODE]='"C5" "Backup Modus"'
-MENU_CONFIG_STOP=$((MCNT++))
-MENU_EN[$MENU_CONFIG_STOP]='"C6" "Services to stop"'
-MENU_DE[$MENU_CONFIG_STOP]='"C6" "Zu stoppende Services"'
 MENU_CONFIG_SERVICES=$((MCNT++))
 MENU_EN[$MENU_CONFIG_SERVICES]='"C6" "Services to stop and start"'
 MENU_DE[$MENU_CONFIG_SERVICES]='"C6" "Zu stoppende und startende Services"'
@@ -1212,7 +1209,7 @@ function config_update_execute() {
 	sed -i "s/^DEFAULT_BACKUPPATH=.*$/DEFAULT_BACKUPPATH=\"$f\"/" "$CONFIG_ABS_FILE"
 
 	local pline sline
-	if [[ "$CONFIG_STOPSERVICES" != "$IGNORE_START_STOP_CHAR" ]]; then
+	if [[ "$CONFIG_STOPSERVICES" != "$IGNORE_START_STOP_CHAR" && -n "$CONFIG_STOPSERVICES" ]]; then
 		getStartStopCommands "$CONFIG_STOPSERVICES" "pline" "sline"
 		pline=$(sed 's/\&/\\\&/g' <<< "$pline")
 		sline=$(sed 's/\&/\\\&/g' <<< "$sline")
@@ -1525,7 +1522,7 @@ function config_menu() {
 	fi
 
 	if isCrontabInstalled; then
-		local l="$(tail -n 1 < $CRON_ABS_FILE))"
+		local l="$(tail -n 1 < $CRON_ABS_FILE)"
 		logItem "last line: $l"
 		local v=$(awk ' {print $1, $2, $5}' <<< "$l")
 		logItem "parsed $v"
@@ -1550,7 +1547,6 @@ function config_menu() {
 		getMenuText $MENU_CONFIG_BACKUPS m3
 		getMenuText $MENU_CONFIG_TYPE m4
 		getMenuText $MENU_CONFIG_MODE m5
-		#getMenuText $MENU_CONFIG_STOP m81
 		getMenuText $MENU_CONFIG_SERVICES m6
 		getMenuText $MENU_CONFIG_MESSAGE m7
 		getMenuText $MENU_CONFIG_CRON m8
@@ -1618,7 +1614,6 @@ function config_menu() {
 				$s4) config_backuptype_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s5) config_backupmode_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s6) config_services_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
-				#$s6) config_stop_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s7) config_message_detail_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s8) cron_menu; CRON_UPDATED=$? ;;
 				$scp) config_compress_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
@@ -1713,60 +1708,6 @@ function config_backuppath_do() {
 	return
 
 }
-
-function config_stop_do() {
-
-	logEntry
-
-	local old="$CONFIG_STOPSERVICES"
-	local current="$old"
-	local pline sline
-
-	while :; do
-		local c1="$(getMessageText $BUTTON_CANCEL)"
-		local o1="$(getMessageText $BUTTON_OK)"
-		local d="$(getMessageText $DESCRIPTION_STARTSTOP)"
-		getMenuText $MENU_CONFIG_STOP tt
-
-		ANSWER=$(whiptail --inputbox "$d" --title "${tt[1]}" $ROWS_MENU $WINDOW_COLS "$current" --ok-button "$o1" --cancel-button "$c1" 3>&1 1>&2 2>&3)
-		if [ $? -eq 0 ]; then
-			logItem "Answer: $ANSWER"
-			current="$ANSWER"
-			if [[ "$ANSWER" =~ ^[[:space:]]*$ ]]; then
-				local m="$(getMessageText $MSG_NO_STOPSERVICES)"
-				local t=$(center $WINDOW_COLS "$m")
-				local ttm="$(getMessageText $TITLE_VALIDATIONERROR)"
-				whiptail --msgbox "$t" --title "$ttm" $ROWS_MENU $WINDOW_COLS 2
-			elif [[ ! "$ANSWER" =~ ^([0-9\ a-zA-Z_-]+|:)$ ]]; then
-				local m="$(getMessageText $MSG_INVALID_STOPSERVICES)"
-				local t=$(center $WINDOW_COLS "$m")
-				local ttm="$(getMessageText $TITLE_VALIDATIONERROR)"
-				whiptail --msgbox "$t" --title "$ttm" $ROWS_MENU $WINDOW_COLS 2
-				current="$ANSWER"
-			else
-				local fails=$(testIfServicesExist "$current")
-				if [[ -z $fails ]]; then
-					CONFIG_STOPSERVICES="$ANSWER"
-					break
-				else
-					current="$ANSWER"
-					local m="$(getMessageText $MSG_SERVICES_DONT_EXIST "$fails")"
-					local ttm="$(getMessageText $TITLE_VALIDATIONERROR)"
-					whiptail --msgbox "$m" --title "$ttm" $ROWS_MENU $WINDOW_COLS 2
-				fi
-			fi
-		else
-			break
-		fi
-	done
-
-	logExit
-
-	[[ "$CONFIG_STOPSERVICES" == "$old" ]]
-	return
-
-}
-
 
 function config_crontime_do() {
 
@@ -2154,6 +2095,8 @@ function progressbar_do() { # <name of description array> <menu title> <funcs to
 			:
 			eval "desc=\${$descArrayName[\$idx]}"
 		do
+			desc=$(center $WINDOW_COLS "$desc")
+
 			cat <<EOF
 XXX
 $counter
