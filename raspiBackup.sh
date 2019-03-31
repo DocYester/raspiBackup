@@ -58,11 +58,11 @@ MYSELF=${0##*/}
 MYNAME=${MYSELF%.*}
 MYPID=$$
 
-GIT_DATE="$Date: 2019-02-17 18:44:17 +0100$"
+GIT_DATE="$Date: 2019-02-25 20:55:57 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<< $GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<< $GIT_DATE)
-GIT_COMMIT="$Sha1: 501084a$"
+GIT_COMMIT="$Sha1: 1225845$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<< $GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -77,6 +77,7 @@ CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$( cd $( dirname ${BASH_SOURCE[0]}); pwd | xargs readlink -f)
 
 # Smiley used in eMail subject to notify about news/events
+SMILEY_WARNING="O.o"
 SMILEY_UPDATE_POSSIBLE=";-)"
 SMILEY_BETA_AVAILABLE=":-D"
 SMILEY_RESTORETEST_REQUIRED="8-)"
@@ -946,6 +947,7 @@ function getMessageText() {         # languageflag messagenumber parm1 parm2 ...
 	local msgPref="${msg:0:3}"
 	if [[ $msgPref == "RBK" ]]; then								# RBK0001E
 		local severity="${msg:7:1}"
+		[[ severity == "W" ]] && WARNING_MESSAGE_WRITTEN=1
 		if [[ "$severity" =~ [EWI] ]]; then
 			local msgHeader=${MSG_HEADER[$severity]}
 			echo "$msgHeader $msg"
@@ -1427,7 +1429,7 @@ DEFAULT_SENDER_EMAIL=""
 # Additional parameters for email program (optional)
 DEFAULT_EMAIL_PARMS=""
 # log level  (0 = none, 1 = debug)
-DEFAULT_LOG_LEVEL=2
+DEFAULT_LOG_LEVEL=1
 # log output ( 0 = syslog, 1 = /var/log, 2 = backuppath, 3 = ./raspiBackup.log, <somefilename>)
 DEFAULT_LOG_OUTPUT=2
 # msg level (0 = minimal, 1 = detailed)
@@ -2339,6 +2341,9 @@ function sendEMail() { # content subject
 
 		local smiley=""
 		if (( $NOTIFY_UPDATE && $NEWS_AVAILABLE )); then
+			if (( $WARNING_MESSAGE_WRITTEN )); then
+				smiley="$SMILEY_WARNING ${smiley}"
+			fi
 			if (( $UPDATE_POSSIBLE )); then
 				smiley="$SMILEY_UPDATE_POSSIBLE ${smiley}"
 			fi
@@ -5659,6 +5664,7 @@ UPDATE_MYSELF=0
 UPDATE_POSSIBLE=0
 USE_HARDLINKS=1
 VERSION_DEPRECATED=0
+WARNING_MESSAGE_WRITTEN=0
 
 PARAMS=""
 
