@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-03-31 12:56:56 +0200$"
+GIT_DATE="$Date: 2019-04-01 20:27:02 +0200$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: 20cedb5$"
+GIT_COMMIT="$Sha1: b447ba2$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -109,6 +109,7 @@ CONFIG_LANGUAGE="${LANG_SYSTEM^^*}"
 CONFIG_MSG_LEVEL="0"
 CONFIG_BACKUPTYPE="rsync"
 CONFIG_KEEPBACKUPS="3"
+CONFIG_BACKUPPATH="/backup"
 CONFIG_BACKUPPATH="/backup"
 CONFIG_PARTITIONBASED_BACKUP="0"
 CONFIG_ZIP_BACKUP="0"
@@ -272,6 +273,9 @@ MSG_DE[$MSG_CONFIG_NOT_INSTALLED]="Keine Konfiguration gefunden."
 MSG_CRON_NOT_INSTALLED=$((SCNT++))
 MSG_EN[$MSG_CRON_NOT_INSTALLED]="No cron configuration found."
 MSG_DE[$MSG_CRON_NOT_INSTALLED]="Keine cron Konfiguration gefunden."
+MSG_NO_UPDATE_AVAILABLE=$((SCNT++))
+MSG_EN[$MSG_NO_UPDATE_AVAILABLE]="(No update available)"
+MSG_DE[$MSG_NO_UPDATE_AVAILABLE]="(Kein Update verfügbar)"
 MSG_NO_EXTENSIONS_FOUND=$((SCNT++))
 MSG_EN[$MSG_NO_EXTENSIONS_FOUND]="No extensions installed."
 MSG_DE[$MSG_NO_EXTENSIONS_FOUND]="Keine Erweiterungen installiert."
@@ -319,7 +323,7 @@ There exist sample extensions which report the memory usage, CPU temperature and
 For details see${NL}https://www.linux-tips-and-tricks.de/en/raspibackupcategoryy/443-raspibackup-extensions."
 MSG_DE[$DESCRIPTION_INSTALLATION]="${NL}$RASPIBACKUP_NAME erlaubt selbstgeschriebene Erweiterungen vor und nach dem Backupprozess aufzurufen. \
 Es gibt Beispielerweiterungen die die Speicherauslastung, die CPU Temperatur sowie die Speicherplatzbenutzung der Backuppartition anzeigen. \
-Weitere Details siehe${NL}https://www.linux-tips-and-tricks.de/de/13-raspberry/442-raspibackup-erweiterungen."
+Für weitere Details siehe${NL}https://www.linux-tips-and-tricks.de/de/13-raspberry/442-raspibackup-erweiterungen."
 DESCRIPTION_COMPRESS=$((SCNT++))
 MSG_EN[$DESCRIPTION_COMPRESS]="${NL}$RASPIBACKUP_NAME can compress dd and tar backups to reduce the size of the backup. Please note this will increase backup time and will heaten the CPU. \
 Please note an option of $FILE_TO_INSTALL which will reduce the size of a dd backup also. \
@@ -328,10 +332,10 @@ MSG_DE[$DESCRIPTION_COMPRESS]="${NL}$RASPIBACKUP_NAME kann dd und tar Backups ko
 $FILE_TO_INSTALL bietet auch eine Option an mit der ein dd Backup verkleinert werden kann. Siehe dazu \
 https://www.linux-tips-and-tricks.de/de/faq#a16."
 DESCRIPTION_CRON=$((SCNT++))
-MSG_EN[$DESCRIPTION_CRON]="${NL}$RASPIBACKUP_NAME should be started on a regular base via cron when the initial configuration and backup and restore testing was done. \
-You can configure the day of the week and he hour the backup should be created every week. If you want to have other backup intervals you have to modify /etc/cron.d/raspiBackup manually."
-MSG_DE[$DESCRIPTION_CRON]="${NL}$RASPIBACKUP_NAME sollte regelmäßig von cron gestartet werden wenn die initiale Konfiguration und Backup und Restore Tests beendet sind. \
-Es ist möglich den Tag und die Uhrzeit zu konfigurieren wann jede Woche ein Backup erstellt werden soll. Falls ein anderes Intervall benötigt wird muss die Datei /etc/cron.d/raspiBackup manuell geändert werden."
+MSG_EN[$DESCRIPTION_CRON]="${NL}$RASPIBACKUP_NAME should be started on a regular base when the initial configuration and backup and restore testing was done. \
+Configure when the backup should be created every week. For other backup intervals you have to modify /etc/cron.d/raspiBackup manually."
+MSG_DE[$DESCRIPTION_CRON]="${NL}$RASPIBACKUP_NAME sollte regelmäßig gestartet werden wenn die initiale Konfiguration sowie Backup und Restore Tests beendet sind. \
+Konfiguriere wann jede Woche ein Backup erstellt werden soll. Für andere Intervalle muss die Datei /etc/cron.d/raspiBackup manuell geändert werden."
 DESCRIPTION_MESSAGEDETAIL=$((SCNT++))
 MSG_EN[$DESCRIPTION_MESSAGEDETAIL]="${NL}$RASPIBACKUP_NAME can either be very verbose with messages or just write the most important. \
 Usually it makes sense to turn it on when installing $RASPIBACKUP_NAME the first time to get additional messages which may help to isolate configuration issue. \
@@ -388,15 +392,15 @@ Standard ist alle Partitionen zu sichern aber es kann auch genau angegeben werde
 DESCRIPTION_BACKUPTYPE=$((SCNT++))
 MSG_EN[$DESCRIPTION_BACKUPTYPE]="${NL}rsync is the suggested backuptype because when using hardlinks from EXT3/4 filesystem it's fast because only changed or new files will be saved. \
 tar should be used if the backup filesystem is no EXT3/4, e.g a remote mounted samba share. Don't used a FAT32 filesystem because the maximum filesize is 4GB. \
-dd should be used if you want to restore the backup on a Windows OS. Drawback is that the whole SD card is saved even only a subset is used. \
-$FILE_TO_INSTALL has an option to reduce the dd backup size. dd and tar backups can be compressed. \
+dd should be used if you want to restore the backup on a Windows OS. \
+dd and tar backups can be compressed. \
 For further details about backup type see${NL}https://www.linux-tips-and-tricks.de/en/backup#butypes. \
 For further details about the option for dd see${NL}https://www.linux-tips-and-tricks.de/en/faq#a16"
 MSG_DE[$DESCRIPTION_BACKUPTYPE]="${NL}rsync ist der empfohlene Backuptyp da durch Hardlinks vom ETX3/4 Dateisystem der Backup schnell ist da nur neue oder geänderte Dateien gesichert werden. \
-tar sollte man benutzen wenn das Backupdateisystem kein EXT3/4 ist, z.B. ein remotes Samba Laufwerk. Ein FAT32 Dateisystem ist ungeeignet da die maximale Dateigröße 		nur 4GB ist. \
-dd ist die richtige Wahl wenn man den Backup auf einem Windows OS wiederherstelen will. Nachteil ist dass immer die ganze SD Karte gesichert wird auch wenn nur ein kleiner 	Teil der Karte belegt ist. \
-$FILE_TO_INSTALL hat eine Option die bewirkt dass die dd Backupgröße reduziert wird. dd und tar Backups können noch zusätzlich komprimiert werden. \
-Weiter Details zum Backuptype finden sich${NL}https://www.linux-tips-and-tricks.de/de/raspibackup#vornach. \
+tar sollte man benutzen wenn das Backupdateisystem kein EXT3/4 ist, z.B. ein remotes Samba Laufwerk. Ein FAT32 Dateisystem ist ungeeignet da die maximale Dateigröße nur 4GB ist. \
+dd ist die richtige Wahl wenn man den Backup auf einem Windows OS wiederherstellen will. \
+dd und tar Backups können noch zusätzlich komprimiert werden. \
+Weiter Details zum Backuptyp finden sich${NL}https://www.linux-tips-and-tricks.de/de/raspibackup#vornach. \
 Weitere Details zu der Option für dd siehe${NL}https://www.linux-tips-and-tricks.de/de/faq#a16"
 
 TITLE_ERROR=$((SCNT++))
@@ -434,10 +438,10 @@ MSG_EN[$MSG_NAVIGATION]="Cursor keys: Move cursor to next menu item, list item o
 Space key: Select/unselect items in a selection list${NL}\
 Tab key: Jump to buttons at the bottom${NL}\
 ${NL}\
-Pfeiltasten: Bewege Schreibmarke in einem Menu oder einer Liste${NL}\
+Pfeiltasten: Bewege Schreibmarke zum nächsten Menueintrag, Listeneintrag oder Auswahlknopf${NL}\
 Leertaste: Selektiere/Deselektieren Einträge in einer Auswahliste${NL}\
 Tab Taste: Springe zu den unteren Auswahlknöpfen"
-MSG_DE[$MSG_NAVIGATION]="Pfeiltasten: Bewege Schreibmarke zur nächsten Auswahl in einem Menu, einer Liste oder Auswahlknopf${NL}\
+MSG_DE[$MSG_NAVIGATION]="Pfeiltasten: Bewege Schreibmarke zum nächsten Menueintrag, Listeneintrag oder Auswahlknopf${NL}\
 Leertaste: Selektiere/Deselektieren Einträge in einer Auswahliste${NL}\
 Tab Taste: Springe zu den unteren Auswahlknöpfen${NL}\
 ${NL}\
@@ -475,7 +479,7 @@ Nächsten Schritte:${NL}
 6) Schalte den wöchentlichen Backup mit dem Installer ein${NL}\
 7) Besuche https://www.linux-tips-and-tricks.de/en/backup um noch wesentlich detailierte Informationen zu $RASPIBACKUP_NAME zu erhalten"
 MSG_HELP=$((SCNT++))
-MSG_EN[$MSG_HELP]="In case you have any issue or question about $RASPIBACKUP_NAME just use one of the following pathes to ask for help${NL}
+MSG_EN[$MSG_HELP]="In case you have any issue or question about $RASPIBACKUP_NAME just use one of the following pathes to get help${NL}
 1) Read the FAQ page https://www.linux-tips-and-tricks.de/en/faq${NL}\
 2) Visit https://www.linux-tips-and-tricks.de/en/backup for a lot more information about $RASPIBACKUP_NAME${NL}\
 3) Create an issue on github https://github.com/framps/raspiBackup/issues. That's my preference${NL}\
@@ -484,7 +488,7 @@ MSG_EN[$MSG_HELP]="In case you have any issue or question about $RASPIBACKUP_NAM
 MSG_DE[$MSG_HELP]="Falls es irgendwelche Fragen oder Probleme zu $RASPIBACKUP_NAME gibt bestehen folgende Möglichkeiten Hilfe zu bekommen${NL}
 1) Lies die FAQ Seite https://www.linux-tips-and-tricks.de/de/faq${NL}\
 2) Besuche https://www.linux-tips-and-tricks.de/en/backup um noch wesentlich detailierte Informationen zu $RASPIBACKUP_NAME zu erhalten${NL}\
-3) Erstelle einen Fehlerbericht auf github https://github.com/framps/raspiBackup/issues. Gerne auch in Deutsch. Das ist meine Präferenz${NL} \
+3) Erstelle einen Fehlerbericht auf github https://github.com/framps/raspiBackup/issues. Gerne auch in Deutsch. Das ist meine Präferenz.${NL} \
 4) Erstelle einen Kommentar auf jeder Webseite zu $RASPIBACKUP_NAME auf $MYHOMEDOMAIN${NL}\
 5) Besuche $RASPIBACKUP_NAME auf Facebook"
 
@@ -542,7 +546,7 @@ MENU_EN[$MENU_CONFIG_BACKUPPATH]='"C2" "Backup path for backups"'
 MENU_DE[$MENU_CONFIG_BACKUPPATH]='"C2" "Verzeichnispfad für die Backups"'
 MENU_CONFIG_BACKUPS=$((MCNT++))
 MENU_EN[$MENU_CONFIG_BACKUPS]='"C3" "Number of backups to save"'
-MENU_DE[$MENU_CONFIG_BACKUPS]='"C4" "Anzahl vorzuhaltender Backups"'
+MENU_DE[$MENU_CONFIG_BACKUPS]='"C3" "Anzahl vorzuhaltender Backups"'
 MENU_CONFIG_TYPE=$((MCNT++))
 MENU_EN[$MENU_CONFIG_TYPE]='"C4" "Backup type"'
 MENU_DE[$MENU_CONFIG_TYPE]='"C4" "Backup Typ"'
@@ -1437,7 +1441,7 @@ function do_finish() {
 		fi
 	fi
 
-	#help
+	help
 
 	reset
 
@@ -1843,6 +1847,7 @@ function config_services_do() {
 
 	getMenuText $MENU_CONFIG_SERVICES tt
 
+	[[ "$current" == "$IGNORE_START_STOP_CHAR" ]] && current=""
 	local c=( $current )
 	local cl=()
 
@@ -1924,7 +1929,7 @@ function config_service_sequence_do() {
 			local c1="$(getMessageText $BUTTON_CANCEL)"
 			local o1="$(getMessageText $BUTTON_OK)"
 
-			ANSWER=$(whiptail --notags --radiolist "$d" --title "$tt" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
+			ANSWER=$(whiptail --notags --radiolist "$d" --title "$tt" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $(($WT_WIDTH/2)) 5 \
 				"${sl[@]}" \
 				3>&1 1>&2 2>&3)
 			if [ $? -eq 0 ]; then
@@ -1997,7 +2002,7 @@ function config_cronday_do() {
 
 	days_[$CONFIG_CRON_DAY]=on
 
-	ANSWER=$(whiptail --notags --radiolist "" --title "${tt[1]}" $WT_HEIGHT $(($WT_WIDTH/2)) 7 \
+	ANSWER=$(whiptail --notags --radiolist "" --title "${tt[1]}" $WT_HEIGHT $(($WT_WIDTH/2)) 5 \
 		"${s[0]}" "${l[0]}" "${days_[0]}" \
 		"${s[1]}" "${l[1]}" "${days_[1]}" \
 		"${s[2]}" "${l[2]}" "${days_[2]}" \
@@ -2155,13 +2160,19 @@ function uninstall_menu() {
 
 }
 
-function isUpgradePossible() {
+function isUpdatePossible() {
+		logEntry
+		logItem "script: c:$VERSION_CURRENT p:$VERSION_PROPERTY"
 		if isNewerVersion "$VERSION_CURRENT" "$VERSION_PROPERTY"; then
+			logExit 0
 			return 0
 		fi
+		logItem "installer: c:$VERSION_CURRENT_INSTALLER p:$VERSION_PROPERTY_INSTALLER"
 		if isNewerVersion "$VERSION_CURRENT_INSTALLER" "$VERSION_PROPERTY_INSTALLER"; then
+			logExit 0
 			return 0
 		fi
+		logExit 1
 		return 1
 }
 
@@ -2315,6 +2326,7 @@ function update_menu() {
 		getMenuText $MENU_UPDATE_SCRIPT m1
 		getMenuText $MENU_UPDATE_INSTALLER m2
 		getMenuText $MENU_UPDATE tt
+		local nua="$(getMessageText $MSG_NO_UPDATE_AVAILABLE)"
 
 		local s1="${m1[0]}"
 		local s2="${m2[0]}"
@@ -2322,13 +2334,13 @@ function update_menu() {
 		if isNewerVersion "$VERSION_CURRENT" "$VERSION_PROPERTY"; then
 			m1[1]="${m1[1]} ($VERSION_CURRENT -> $VERSION_PROPERTY)"
 		else
-			m1[1]="${m1[1]} (no upgrade available)"
+			m1[1]="${m1[1]} $nua"
 		fi
 
 		if isNewerVersion "$VERSION_CURRENT_INSTALLER" "$VERSION_PROPERTY_INSTALLER"; then
 			m2[1]="${m2[1]} ($VERSION_CURRENT_INSTALLER -> $VERSION_PROPERTY_INSTALLER)"
 		else
-			m2[1]="${m2[1]} (no upgrade available)"
+			m2[1]="${m2[1]} $nua"
 		fi
 
 		FUN=$(whiptail --title "${tt[1]}" --menu "" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button "$b1" --ok-button "$o1" \
@@ -2887,7 +2899,7 @@ function uiInstall() {
 			m4=(" " " ")
 		fi
 
-		if ! isUpgradePossible; then
+		if ! isUpdatePossible; then
 			m5[0]=" "
 			m5[1]=" "
 		fi
