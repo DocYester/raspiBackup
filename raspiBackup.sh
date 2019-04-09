@@ -58,11 +58,11 @@ MYSELF=${0##*/}
 MYNAME=${MYSELF%.*}
 MYPID=$$
 
-GIT_DATE="$Date: 2019-03-30 18:51:37 +0100$"
+GIT_DATE="$Date: 2019-03-15 19:29:45 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<< $GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<< $GIT_DATE)
-GIT_COMMIT="$Sha1: 893fea4$"
+GIT_COMMIT="$Sha1: 47da628$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<< $GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -263,8 +263,6 @@ RC_DEVICES_NOTFOUND=118
 RC_CREATE_ERROR=119
 RC_MISSING_COMMANDS=120
 RC_NO_BOOT_FOUND=121
-RC_BEFORE_START_SERVICES_ERROR=122
-RC_BEFORE_STOP_SERVICES_ERROR=123
 
 tty -s
 INTERACTIVE=!$?
@@ -835,12 +833,12 @@ MSG_DE[$MSG_IMG_BOOT_RESTORE_FAILED]="RBK0179E: Wiederherstellung von %s Datei e
 MSG_FORMATTING_FIRST_PARTITION=180
 MSG_EN[$MSG_FORMATTING_FIRST_PARTITION]="RBK0180I: Formating first partition (boot partition) %s."
 MSG_DE[$MSG_FORMATTING_FIRST_PARTITION]="RBK0180I: Erste Partition (Bootpartition) %s wird formatiert."
-MSG_AFTER_STARTING_SERVICES=181
-MSG_EN[$MSG_AFTER_STARTING_SERVICES]="RBK0181I: Executing commands pre backup: '%s'."
-MSG_DE[$MSG_AFTER_STARTING_SERVICES]="RBK0181I: Vor dem Backup ausgeführte Befehle: '%s'."
-MSG_BEFORE_STOPPING_SERVICES=182
-MSG_EN[$MSG_BEFORE_STOPPING_SERVICES]="RBK0182I: Executing commands post backup: '%s'."
-MSG_DE[$MSG_BEFORE_STOPPING_SERVICES]="RBK0182I: Nach dem Backup ausgeführte Befehle: '%s'."
+#MSG_IMG_BOOT_CHECK_FAILED=181
+#MSG_EN[$MSG_IMG_BOOT_CHECK_FAILED]="RBK0181E: Bootpartition check failed with RC %s."
+#MSG_DE[$MSG_IMG_BOOT_CHECK_FAILED]="RBK0181E: Bootpartitionscheck endet fehlerhaft mit RC %s."
+#MSG_IMG_BOOT_CHECK_STARTED=182
+#MSG_EN[$MSG_IMG_BOOT_CHECK_STARTED]="RBK0182I: Bootpartition check started."
+#MSG_DE[$MSG_IMG_BOOT_CHECK_STARTED]="RBK0182I: Bootpartitionscheck gestartet."
 MSG_IMG_ROOT_CHECK_FAILED=183
 MSG_EN[$MSG_IMG_ROOT_CHECK_FAILED]="RBK0183E: Rootpartition check failed with RC %s."
 MSG_DE[$MSG_IMG_ROOT_CHECK_FAILED]="RBK0183E: Rootpartitionscheck endet fehlerhaft mit RC %s."
@@ -893,18 +891,18 @@ MSG_DE[$MSG_NO_HARDLINKS_USED]="RBK0196W: %s unterstützt keine Hardlinks."
 MSG_EMAIL_SEND_FAILED=197
 MSG_EN[$MSG_EMAIL_SEND_FAILED]="RBK0197W: eMail send command %s failed with RC %s."
 MSG_DE[$MSG_EMAIL_SEND_FAILED]="RBK0197W: eMail mit %s versenden endet fehlerhaft mit RC %s."
-MSG_BEFORE_START_SERVICES_FAILED=198
-MSG_EN[$MSG_BEFORE_START_SERVICES_FAILED]="RBK0198E: Pre backup commands failed with %s."
-MSG_DE[$MSG_BEFORE_START_SERVICES_FAILED]="RBK0198E: Fehler in vor dem Backup ausgeführten Befehlen %s."
+#MSG_NO_HARDLINKS_USED=198
+#MSG_EN[$MSG_NO_HARDLINKS_USED]="RBK0198W: No hardlinks supported on %s."
+#MSG_DE[$MSG_NO_HARDLINKS_USED]="RBK0198W: %s unterstützt keine Hardlinks."
 MSG_MISSING_RESTOREDEVICE_OPTION=199
 MSG_EN[$MSG_MISSING_RESTOREDEVICE_OPTION]="RBK0199E: Option -R requires also option -d."
 MSG_DE[$MSG_MISSING_RESTOREDEVICE_OPTION]="RBK0199E: Option -r benötigt auch Option -d."
 MSG_SHARED_BOOT_DEVICE=200
 MSG_EN[$MSG_SHARED_BOOT_DEVICE]="RBK0200I: /boot and / located on same device %s."
 MSG_DE[$MSG_SHARED_BOOT_DEVICE]="RBK0200I: /boot und / befinden sich auf demselben Gerät %s."
-MSG_BEFORE_STOP_SERVICES_FAILED=201
-MSG_EN[$MSG_BEFORE_STOP_SERVICES_FAILED]="RBK0201E: Post backup commands failed with %s."
-MSG_DE[$MSG_BEFORE_STOP_SERVICES_FAILED]="RBK0201E: Fehler in nach dem Backup ausgeführten Befehlen %s."
+#MSG_SHARED_BOOT_DEVICE_NOT_SUPPORTED=201
+#MSG_EN[$MSG_SHARED_BOOT_DEVICE_NOT_SUPPORTED]="RBK0201E: /boot and / located on same device and right now not supported with backuptype %s. Use dd"
+#MSG_DE[$MSG_SHARED_BOOT_DEVICE_NOT_SUPPORTED]="RBK0201E: /boot und / auf demselben Gerät sind vorläufig nicht unterstützt bei dem Backuptyp %s. Benutze dd"
 MSG_RESTORETEST_REQUIRED=202
 MSG_EN[$MSG_RESTORETEST_REQUIRED]="RBK0202W: $SMILEY_RESTORETEST_REQUIRED Friendly reminder: Execute now a restore test. You will be reminded %s times again."
 MSG_DE[$MSG_RESTORETEST_REQUIRED]="RBK0201W: $SMILEY_RESTORETEST_REQUIRED Freundlicher Hinweis: Führe einen Restoretest durch. Du wirst noch %s mal erinnert werden."
@@ -1332,8 +1330,6 @@ function logOptions() {
 	logItem "APPEND_LOG_OPTION=$APPEND_LOG_OPTION"
 	logItem "BACKUPPATH=$BACKUPPATH"
 	logItem "BACKUPTYPE=$BACKUPTYPE"
-	logItem "AFTER_STARTSERVICES=$AFTER_STARTSERVICES"
-	logItem "BEFORE_STOPSERVICES=$BEFORE_STOPSERVICES"
 	logItem "CHECK_FOR_BAD_BLOCKS=$CHECK_FOR_BAD_BLOCKS"
  	logItem "CONFIG_FILE=$CONFIG_FILE"
  	logItem "DD_BACKUP_SAVE_USED_PARTITIONS_ONLY=$DD_BACKUP_SAVE_USED_PARTITIONS_ONLY"
@@ -1423,10 +1419,6 @@ function initializeDefaultConfig() {
 	DEFAULT_STOPSERVICES=""
 	# commands to start services after backup separated by &&
 	DEFAULT_STARTSERVICES=""
-	# commands to execute before backup stops separated by &&
-	DEFAULT_BEFORE_STOPSERVICES=""
-	# commands to execute after backup start separated by &&
-	DEFAULT_AFTER_STARTSERVICES=""
 	# email to send completion status
 	DEFAULT_EMAIL=""
 	# sender email used with ssmtp
@@ -1868,24 +1860,6 @@ function stopServices() {
 	logExit
 }
 
-function executeBeforeStopServices() {
-	logEntry
-	if [[ -n "$BEFORE_STOPSERVICES" ]]; then
-		writeToConsole $MSG_LEVEL_DETAILED $MSG_BEFORE_STOPPING_SERVICES "$BEFORE_STOPSERVICES"
-		logItem "$BEFORE_STOPSERVICES"
-		if (( ! $FAKE_BACKUPS )); then
-			executeShellCommand "$BEFORE_STOPSERVICES"
-			local rc=$?
-			if [[ $rc != 0 ]]; then
-				writeToConsole $MSG_LEVEL_MINIMAL $MSG_BEFORE_STOP_SERVICES_FAILED "$rc"
-				exitError $RC_BEFORE_STOP_SERVICES_ERROR
-			fi
-			BEFORE_STOPPED_SERVICES=1
-		fi
-	fi
-	logExit
-}
-
 function startServices() {
 
 	logEntry
@@ -1909,26 +1883,6 @@ function startServices() {
 				fi
 				STOPPED_SERVICES=0
 			fi
-		fi
-	fi
-	logExit
-}
-
-function executeAfterStartServices() {
-	logEntry
-	if [[ -n "$AFTER_STARTSERVICES" ]]; then
-		writeToConsole $MSG_LEVEL_DETAILED $MSG_AFTER_STARTING_SERVICES "$AFTER_STARTSERVICES"
-		logItem "$AFTER_STARTSERVICES"
-		if (( ! $FAKE_BACKUPS )); then
-			executeShellCommand "$AFTER_STARTSERVICES"
-			local rc=$?
-			if [[ $rc != 0 ]]; then
-				writeToConsole $MSG_LEVEL_MINIMAL $MSG_BEFORE_START_SERVICES_FAILED "$rc"
-				if [[ "$1" != "noexit" ]]; then
-					exitError $RC_BEFORE_START_SERVICES_ERROR
-				fi
-			fi
-			BEFORE_STOPPED_SERVICES=0
 		fi
 	fi
 	logExit
@@ -2767,7 +2721,6 @@ function cleanupBackup() { # trap
 
 		if (( $rc == $RC_STOP_SERVICES_ERROR )) || (( $STOPPED_SERVICES )); then
 			startServices "noexit"
-			executeAfterStartServices "noexit"
 		fi
 
 		if [[ $rc != $RC_CTRLC ]]; then
@@ -3610,7 +3563,6 @@ function backup() {
 
 	logger -t $MYSELF "Starting backup..."
 
-	executeBeforeStopServices
 	stopServices
 	callExtensions $PRE_BACKUP_EXTENSION "0"
 
@@ -3759,7 +3711,6 @@ function backup() {
 
 	callExtensions $POST_BACKUP_EXTENSION $rc
 	startServices
-	executeAfterStartServices
 
 	logger -t $MYSELF "Backup finished"
 	logExit
@@ -6100,8 +6051,6 @@ fi
 [[ -z "$APPEND_LOG_OPTION" ]] && APPEND_LOG_OPTION="$DEFAULT_APPEND_LOG_OPTION"
 [[ -z "$BACKUPPATH" ]] && BACKUPPATH="$DEFAULT_BACKUPPATH"
 [[ -z "$BACKUPTYPE" ]] && BACKUPTYPE="$DEFAULT_BACKUPTYPE"
-[[ -z "$AFTER_STARTSERVICES" ]] && AFTER_STARTSERVICES="$DEFAULT_AFTER_STARTSERVICES"
-[[ -z "$BEFORE_STOPSERVICES" ]] && BEFORE_STOPSERVICES="$DEFAULT_BEFORE_STOPSERVICES"
 [[ -z "$CHECK_FOR_BAD_BLOCKS" ]] && CHECK_FOR_BAD_BLOCKS="$DEFAULT_CHECK_FOR_BAD_BLOCKS"
 [[ -z "$DD_BACKUP_SAVE_USED_PARTITIONS_ONLY" ]] && DD_BACKUP_SAVE_USED_PARTITIONS_ONLY="$DEFAULT_DD_BACKUP_SAVE_USED_PARTITIONS_ONLY"
 [[ -z "$DD_BLOCKSIZE" ]] && DD_BLOCKSIZE="$DEFAULT_DD_BLOCKSIZE"

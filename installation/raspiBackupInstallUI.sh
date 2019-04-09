@@ -110,12 +110,13 @@ CONFIG_MSG_LEVEL="0"
 CONFIG_BACKUPTYPE="rsync"
 CONFIG_KEEPBACKUPS="3"
 CONFIG_BACKUPPATH="/backup"
-CONFIG_BACKUPPATH="/backup"
 CONFIG_PARTITIONBASED_BACKUP="0"
 CONFIG_ZIP_BACKUP="0"
 CONFIG_CRON_HOUR="5"
 CONFIG_CRON_MINUTE="0"
 CONFIG_CRON_DAY="0"
+CONFIG_MAIL_PROGRAM="mail"
+CONFIG_EMAIL=""
 
 ROWS_MSGBOX=10
 ROWS_ABOUT=16
@@ -402,6 +403,12 @@ dd ist die richtige Wahl wenn man den Backup auf einem Windows OS wiederherstell
 dd und tar Backups können noch zusätzlich komprimiert werden. \
 Weiter Details zum Backuptyp finden sich${NL}https://www.linux-tips-and-tricks.de/de/raspibackup#vornach. \
 Weitere Details zu der Option für dd siehe${NL}https://www.linux-tips-and-tricks.de/de/faq#a16"
+DESCRIPTION_MAIL_PROGRAM=$((SCNT++))
+MSG_EN[$DESCRIPTION_MAIL_PROGRAM]="Select the mail program to use to send notification eMails."
+MSG_DE[$DESCRIPTION_MAIL_PROGRAM]="Wähle das Mailprogramm aus welches zum Versenden von Benachrichtigungen benutzt werden soll."
+DESCRIPTION_EMAIL=$((SCNT++))
+MSG_EN[$DESCRIPTION_EMAIL]="Enter the eMail address to send notifications to. Enter no eMail address to disable notifications."
+MSG_DE[$DESCRIPTION_EMAIL]="Gibt die eMail Adresse ein die Benachrichtigungen erhalten soll. Keine eMail Adresse schaltet Benachrichtigungen aus."
 
 TITLE_ERROR=$((SCNT++))
 MSG_EN[$TITLE_ERROR]="Error"
@@ -430,6 +437,9 @@ MSG_DE[$TITLE_CURRENT_STOP]="Zu stoppende Services:"
 MSG_INVALID_BACKUPPATH=$((SCNT++))
 MSG_EN[$MSG_INVALID_BACKUPPATH]="Backup path %1 does not exist"
 MSG_DE[$MSG_INVALID_BACKUPPATH]="Sicherungsverzeichnis %1 existiert nicht"
+MSG_INVALID_EMAIL=$((SCNT++))
+MSG_EN[$MSG_INVALID_EMAIL]="Invalid eMail address %1"
+MSG_DE[$MSG_INVALID_EMAIL]="Ungültige eMail Adresse %1"
 MSG_LOCAL_BACKUPPATH=$((SCNT++))
 MSG_EN[$MSG_LOCAL_BACKUPPATH]="Backup would be stored on SD card"
 MSG_DE[$MSG_LOCAL_BACKUPPATH]="Backup würde auf der SD Karte gespeichert werden"
@@ -464,7 +474,7 @@ Next steps:${NL}
 2) Start $RASPIBACKUP_NAME to restore the backup on a different SD card${NL}\
 3) Verify the restored backup works fine.${NL}\
 4) Read the FAQ page https://www.linux-tips-and-tricks.de/en/faq${NL}\
-5) Visit the options page and fine tune $RASPIBACKUP_NAME${NL} (eMail notification is very useful)${NL}\
+5) Visit the options page and fine tune $RASPIBACKUP_NAME${NL}\
    https://www.linux-tips-and-tricks.de/en/raspibackup#parameters${NL}\
 6) Enable weekly backup with the installer${NL}\
 7) Visit https://www.linux-tips-and-tricks.de/en/backup for a lot more information about $RASPIBACKUP_NAME"
@@ -474,7 +484,7 @@ Nächsten Schritte:${NL}
 2) Starte $RASPIBACKUP_NAME um das erzeugte Backup auf einer andere SD Karte wiederherzustellen.${NL}\
 3) Verifiziere dass das System ohne Probleme läuft.${NL}\
 4) Lies die FAQ Seite https://www.linux-tips-and-tricks.de/de/faq${NL}\
-5) Besuche die Optionsseite und konfiguriere $RASPIBACKUP_NAME genau nach Deinen Vorstellungen${NL} (eMail Benachrichtigung ist sehr sinnvoll)${NL}\
+5) Besuche die Optionsseite und konfiguriere $RASPIBACKUP_NAME genau nach Deinen Vorstellungen${NL}\
    https://www.linux-tips-and-tricks.de/de/raspibackup#parameters${NL}\
 6) Schalte den wöchentlichen Backup mit dem Installer ein${NL}\
 7) Besuche https://www.linux-tips-and-tricks.de/en/backup um noch wesentlich detailierte Informationen zu $RASPIBACKUP_NAME zu erhalten"
@@ -559,12 +569,15 @@ MENU_DE[$MENU_CONFIG_SERVICES]='"C6" "Zu stoppende und startende Services"'
 MENU_CONFIG_MESSAGE=$((MCNT++))
 MENU_EN[$MENU_CONFIG_MESSAGE]='"C7" "Message verbosity"'
 MENU_DE[$MENU_CONFIG_MESSAGE]='"C7" "Meldungsgenauigkeit"'
+MENU_CONFIG_EMAIL=$((MCNT++))
+MENU_EN[$MENU_CONFIG_EMAIL]='"C8" "eMail notification"'
+MENU_DE[$MENU_CONFIG_EMAIL]='"C8" "eMail Benachrichtigung"'
 MENU_CONFIG_CRON=$((MCNT++))
-MENU_EN[$MENU_CONFIG_CRON]='"C8" "Regular backup"'
-MENU_DE[$MENU_CONFIG_CRON]='"C8" "Regelmäßiges Backup"'
+MENU_EN[$MENU_CONFIG_CRON]='"C9" "Regular backup"'
+MENU_DE[$MENU_CONFIG_CRON]='"C9" "Regelmäßiges Backup"'
 MENU_CONFIG_ZIP=$((MCNT++))
-MENU_EN[$MENU_CONFIG_ZIP]='"C9" "Compression"'
-MENU_DE[$MENU_CONFIG_ZIP]='"C9" "Komprimierung"'
+MENU_EN[$MENU_CONFIG_ZIP]='"C10" "Compression"'
+MENU_DE[$MENU_CONFIG_ZIP]='"C10" "Komprimierung"'
 MENU_CONFIG_ZIP_NA=$((MCNT++))
 MENU_EN[$MENU_CONFIG_ZIP_NA]='" " " "'
 MENU_DE[$MENU_CONFIG_ZIP_NA]='" " " "'
@@ -580,6 +593,15 @@ MENU_DE[$MENU_INSTALL_INSTALL]='"I1" "Installiere $RASPIBACKUP_NAME mit einer St
 MENU_INSTALL_EXTENSIONS=$((MCNT++))
 MENU_EN[$MENU_INSTALL_EXTENSIONS]='"I2" "Install and enable sample extension"'
 MENU_DE[$MENU_INSTALL_EXTENSIONS]='"I2" "Installiere Beispielerweiterungen"'
+MENU_CONFIG_MAIL_MAIL=$((MCNT++))
+MENU_EN[$MENU_CONFIG_MAIL_MAIL]='"mail" ""'
+MENU_DE[$MENU_CONFIG_MAIL_MAIL]='"mail" ""'
+MENU_CONFIG_MAIL_SSMTP=$((MCNT++))
+MENU_EN[$MENU_CONFIG_MAIL_SSMTP]='"ssmtp" ""'
+MENU_DE[$MENU_CONFIG_MAIL_SSMTP]='"ssmtp" ""'
+MENU_CONFIG_MAIL_MSMTP=$((MCNT++))
+MENU_EN[$MENU_CONFIG_MAIL_MSMTP]='"msmtp" ""'
+MENU_DE[$MENU_CONFIG_MAIL_MSMTP]='"msmtp" ""'
 MENU_CONFIG_TYPE_DD=$((MCNT++))
 MENU_EN[$MENU_CONFIG_TYPE_DD]='"dd" "Backup with dd and restore on Windows"'
 MENU_DE[$MENU_CONFIG_TYPE_DD]='"dd" "Sichere mit dd und stelle unter Windows wieder her"'
@@ -1187,6 +1209,26 @@ function getStartStopCommands() { # listOfServicesToStop pcommandvarname scomman
 	logExit
 }
 
+function parseConfig() {
+	logEntry
+	IFS="" matches=$(grep -E "MSG_LEVEL|KEEPBACKUPS|BACKUPPATH|BACKUPTYPE|ZIP_BACKUP|PARTITIONBASED_BACKUP|LANGUAGE|STARTSERVICES|STOPSERVICES|EMAIL|MAIL_PROGRAM" "$CONFIG_ABS_FILE")
+	while IFS="=" read key value; do
+		key=${key//\"/}
+		key=${key/DEFAULT/CONFIG}
+		value=${value//\"/}
+		if [[ $key =~ .*SERVICES.* ]]; then
+			if [[ "$value" == "$IGNORE_START_STOP_CHAR" ]]; then
+				value=""
+			else
+				value=$(sed -e 's/start//g' -e 's/stop//g' -e 's/systemctl//g' -e 's/\&\&//g' -e 's/ \+/ /g' <<< "$value"  | xargs )
+			fi
+		fi
+		logItem "$key=$value"
+		eval "$key=\"$value\""
+	done <<< "$matches"
+	logExit
+}
+
 function config_update_execute() {
 
 	logEntry
@@ -1194,7 +1236,7 @@ function config_update_execute() {
 	writeToConsole $MSG_UPDATING_CONFIG "$CONFIG_ABS_FILE"
 
 	logItem "Language: $CONFIG_LANGUAGE"
-	logItem "Mode: $CONFIG_PARTITIONBASED_BACKUPMSG_LEVEL"
+	logItem "Mode: $CONFIG_PARTITIONBASED_BACKUP"
 	logItem "Type: $CONFIG_BACKUPTYPE"
 	logItem "Zip: $CONFIG_ZIP_BACKUP"
 	logItem "Keep: $CONFIG_KEEPBACKUPS"
@@ -1202,6 +1244,8 @@ function config_update_execute() {
 	logItem "Backuppath: $CONFIG_BACKUPPATH"
 	logItem "Stop: $CONFIG_STOPSERVICES"
 	logItem "Start: $CONFIG_STARTSERVICES"
+	logItem "eMail: $CONFIG_EMAIL"
+	logItem "mailProgram: $CONFIG_MAIL_PROGRAM"
 
 	sed -i "s/^DEFAULT_LANGUAGE=.*\$/DEFAULT_LANGUAGE=\"$CONFIG_LANGUAGE\"/" "$CONFIG_ABS_FILE"
 	sed -i "s/^DEFAULT_PARTITIONBASED_BACKUP=.*\$/DEFAULT_PARTITIONBASED_BACKUP=\"$CONFIG_PARTITIONBASED_BACKUP\"/" "$CONFIG_ABS_FILE"
@@ -1209,6 +1253,8 @@ function config_update_execute() {
 	sed -i "s/^DEFAULT_ZIP_BACKUP=.*\$/DEFAULT_ZIP_BACKUP=\"$CONFIG_ZIP_BACKUP\"/" "$CONFIG_ABS_FILE"
 	sed -i "s/^DEFAULT_KEEPBACKUPS=.*\$/DEFAULT_KEEPBACKUPS=\"$CONFIG_KEEPBACKUPS\"/" "$CONFIG_ABS_FILE"
 	sed -i "s/^DEFAULT_MSG_LEVEL=.*$/DEFAULT_MSG_LEVEL=\"$CONFIG_MSG_LEVEL\"/" "$CONFIG_ABS_FILE"
+	sed -i "s/^DEFAULT_EMAIL=.*$/DEFAULT_EMAIL=\"$CONFIG_EMAIL\"/" "$CONFIG_ABS_FILE"
+	sed -i "s/^DEFAULT_MAIL_PROGRAM=.*$/DEFAULT_MAIL_PROGRAM=\"$CONFIG_MAIL_PROGRAM\"/" "$CONFIG_ABS_FILE"
 	local f=$(sed 's_/_\\/_g' <<< "$CONFIG_BACKUPPATH")
 	sed -i "s/^DEFAULT_BACKUPPATH=.*$/DEFAULT_BACKUPPATH=\"$f\"/" "$CONFIG_ABS_FILE"
 
@@ -1553,7 +1599,8 @@ function config_menu() {
 		getMenuText $MENU_CONFIG_MODE m5
 		getMenuText $MENU_CONFIG_SERVICES m6
 		getMenuText $MENU_CONFIG_MESSAGE m7
-		getMenuText $MENU_CONFIG_CRON m8
+		getMenuText $MENU_CONFIG_EMAIL m8
+		getMenuText $MENU_CONFIG_CRON m9
 
 		local p="${m1[0]}"
 		m1[0]="C${p:1}"
@@ -1574,6 +1621,7 @@ function config_menu() {
 		local s6="${m6[0]}"
 		local s7="${m7[0]}"
 		local s8="${m8[0]}"
+		local s9="${m9[0]}"
 
 		getMenuText $MENU_CONFIGURE tt
 
@@ -1586,6 +1634,7 @@ function config_menu() {
 			"${m6[@]}" \
 			"${m7[@]}" \
 			"${m8[@]}" \
+			"${m9[@]}" \
 			"${mcp[@]}" \
 			3>&1 1>&2 2>&3)
 		RET=$?
@@ -1619,7 +1668,8 @@ function config_menu() {
 				$s5) config_backupmode_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s6) config_services_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				$s7) config_message_detail_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
-				$s8) cron_menu; CRON_UPDATED=$? ;;
+				$s8) config_email_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
+				$s9) cron_menu; CRON_UPDATED=$? ;;
 				$scp) config_compress_do; CONFIG_UPDATED=$(( CONFIG_UPDATED|$? )) ;;
 				\ *) : ;;
 				*) whiptail --msgbox "Programm error: unrecognized option $FUN" $ROWS_MENU $WINDOW_COLS 1 ;;
@@ -1760,6 +1810,100 @@ function config_crontime_do() {
 
 }
 
+function config_email_do() {
+
+	getMenuText $MENU_CONFIG_EMAIL tt
+	c1="$(getMessageText $BUTTON_CANCEL)"
+	o1="$(getMessageText $BUTTON_OK)"
+
+	local current="$CONFIG_EMAIL"
+	local oldeMail="$current"
+
+	local d="$(getMessageText $DESCRIPTION_EMAIL)"
+
+	while :; do
+		ANSWER=$(whiptail --inputbox "$d" --title "${tt[1]}" $ROWS_MENU $WINDOW_COLS "$current" --ok-button "$o1" --cancel-button "$c1" 3>&1 1>&2 2>&3)
+		if [ $? -eq 0 ]; then
+			logItem "Answer: $ANSWER"
+			current="$ANSWER"
+			if [[ -n "$current" ]]; then
+				if ! [[ "$current" =~ ^[a-zA-Z0-9_.+-]+\@[a-zA-Z0-9-]+\.[a-zA-Z0-9.-]+$ ]]; then
+					local m="$(getMessageText $MSG_INVALID_EMAIL "$current")"
+					local t=$(center $WINDOW_COLS "$m")
+					local ttm="$(getMessageText $TITLE_VALIDATIONERROR)"
+					whiptail --msgbox "$t" --title "$ttm" $ROWS_MENU $WINDOW_COLS 2
+				else
+					CONFIG_EMAIL="$ANSWER"
+					break
+				fi
+			else
+				CONFIG_EMAIL="$ANSWER"
+				break
+			fi
+		else
+			break
+		fi
+	done
+
+	logItem "eMail: $CONFIG_EMAIL"
+
+	if [[ -z $CONFIG_EMAIL ]]; then
+		[[ "$oldeMail" == "$CONFIG_EMAIL" ]]
+		local rc=$?
+		logExit "$rc"
+		return $rc
+	fi
+
+	local mail_=off
+	local ssmtp_=off
+	local msmtp_=off
+	local old="$CONFIG_MAIL_PROGRAM"
+
+	logEntry "$old"
+
+	getMenuText $MENU_CONFIG_MAIL_MAIL m1
+	getMenuText $MENU_CONFIG_MAIL_SSMTP m2
+	getMenuText $MENU_CONFIG_MAIL_MSMTP m3
+	local s1="${m1[0]}"
+	local s2="${m2[0]}"
+	local s3="${m3[0]}"
+
+	local o1="$(getMessageText $BUTTON_OK)"
+	local c1="$(getMessageText $BUTTON_CANCEL)"
+
+	case "$CONFIG_MAIL_PROGRAM" in
+		mail) mail_=on ;;
+		ssmtp) ssmtp_=on ;;
+		msmtp) msmtp_=on ;;
+	esac
+
+	local d="$(getMessageText $DESCRIPTION_MAIL_PROGRAM)"
+
+	ANSWER=$(whiptail --notags --radiolist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $WT_WIDTH 3 \
+		"${m1[@]}" "$mail_" \
+		"${m2[@]}" "$ssmtp_" \
+		"${m3[@]}" "$msmtp_" \
+		3>&1 1>&2 2>&3)
+	if [ $? -eq 0 ]; then
+		logItem "Answer: $ANSWER"
+		case "$ANSWER" in
+			$s3) CONFIG_MAIL_PROGRAM="msmtp" ;;
+			$s2) CONFIG_MAIL_PROGRAM="ssmtp" ;;
+			$s1) CONFIG_MAIL_PROGRAM="mail" ;;
+			*) whiptail --msgbox "Programm error, unrecognized backup type" $ROWS_MENU $WINDOW_COLS 2
+				logExit
+				return 1 ;;
+		esac
+	fi
+
+	[[ "$old" == "$CONFIG_MAIL_PROGRAM" ]] && [[ "$oldeMail" == "$CONFIG_EMAIL" ]]
+
+	local rc=$?
+	logExit "$rc - $old:$CONFIG_MAIL_PROGRAM $oldeMail:$CONFIG_EMAIL"
+
+	return $rc
+}
+
 function config_backuptype_do() {
 
 	local dd_=off
@@ -1818,10 +1962,10 @@ function config_backuptype_do() {
 		esac
 	fi
 
-	logExit "$CONFIG_PARTITIONBASED_BACKUP"
-
 	[[ "$old" == "$CONFIG_BACKUPTYPE" ]]
-	return
+	local rc=$?
+	logExit "$rc - $CONFIG_BACKUPTYPE"
+	return $rc
 }
 
 # borrowed from http://stackoverflow.com/questions/3685970/check-if-an-array-contains-a-value
@@ -2817,24 +2961,6 @@ function shouldRenewDownloadPropertiesFile() {
 
 	logExit "$rc"
 	return $rc
-}
-
-function parseConfig() {
-	IFS="" matches=$(grep -E "MSG_LEVEL|KEEPBACKUPS|BACKUPPATH|BACKUPTYPE|ZIP_BACKUP|PARTITIONBASED_BACKUP|LANGUAGE|STARTSERVICES|STOPSERVICES" "$CONFIG_ABS_FILE")
-	while IFS="=" read key value; do
-		key=${key//\"/}
-		key=${key/DEFAULT/CONFIG}
-		value=${value//\"/}
-		if [[ $key =~ .*SERVICES.* ]]; then
-			if [[ "$value" == "$IGNORE_START_STOP_CHAR" ]]; then
-				value=""
-			else
-				value=$(sed -e 's/start//g' -e 's/stop//g' -e 's/systemctl//g' -e 's/\&\&//g' -e 's/ \+/ /g' <<< "$value"  | xargs )
-			fi
-		fi
-		logItem "$key=$value"
-		eval "$key=\"$value\""
-	done <<< "$matches"
 }
 
 function error() {
