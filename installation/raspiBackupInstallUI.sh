@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-04-01 20:27:02 +0200$"
+GIT_DATE="$Date: 2019-03-16 19:00:19 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: b447ba2$"
+GIT_COMMIT="$Sha1: 74411c9$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -370,8 +370,10 @@ They will be started in reverse sequence again when the backup finished."
 MSG_DE[$DESCRIPTION_STARTSTOP_SERVICES]="${NL}Wähle alle wichtigen Services aus die vor dem Backup gestoppt werden sollen. \
 Sie werden wieder in umgekehrter Reihenfolge gestartet wenn der Backup beendet wurde."
 DESCRIPTION_LANGUAGE=$((SCNT++))
-MSG_EN[$DESCRIPTION_LANGUAGE]="${NL}$RASPIBACKUP_NAME and this installer support English and German. The default language is set by the system language."
-MSG_DE[$DESCRIPTION_LANGUAGE]="${NL}$RASPIBACKUP_NAME und dieser Installer unterstützen Englisch und Deutsch. Standard ist die Systemsprache."
+MSG_EN[$DESCRIPTION_LANGUAGE]="${NL}$RASPIBACKUP_NAME und dieser Installer unterstützen Englisch und Deutsch. Standard ist die Systemsprache.${NL}\
+${NL}$RASPIBACKUP_NAME and this installer support English and German. The default language is set by the system language."
+MSG_DE[$DESCRIPTION_LANGUAGE]="${NL}$RASPIBACKUP_NAME and this installer support English and German. The default language is set by the system language.${NL}\
+${NL}$RASPIBACKUP_NAME und dieser Installer unterstützen Englisch und Deutsch. Standard ist die Systemsprache."
 DESCRIPTION_KEEP=$((SCNT++))
 MSG_EN[$DESCRIPTION_KEEP]="${NL}This number defines how many backups will be kept on the backup partition. If more backups are created the oldest backups will be deleted."
 MSG_DE[$DESCRIPTION_KEEP]="${NL}Diese Zahl bestimmt wie viele Backups auf der Backupartition gehalten werden. Sobald diese Zahl überschritten wird werden die ältesten Backups automatisch gelöscht."
@@ -1841,7 +1843,8 @@ function config_email_do() {
 				break
 			fi
 		else
-			break
+			logExit
+			return 0
 		fi
 	done
 
@@ -1879,7 +1882,7 @@ function config_email_do() {
 
 	local d="$(getMessageText $DESCRIPTION_MAIL_PROGRAM)"
 
-	ANSWER=$(whiptail --notags --radiolist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $WT_WIDTH 3 \
+	ANSWER=$(whiptail --radiolist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $WT_WIDTH 3 \
 		"${m1[@]}" "$mail_" \
 		"${m2[@]}" "$ssmtp_" \
 		"${m3[@]}" "$msmtp_" \
