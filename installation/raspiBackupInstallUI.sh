@@ -39,11 +39,11 @@ MYHOMEURL="https://$MYHOMEDOMAIN"
 
 MYDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-GIT_DATE="$Date: 2019-04-01 20:27:02 +0200$"
+GIT_DATE="$Date: 2019-02-06 21:53:12 +0100$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<<$GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<<$GIT_DATE)
-GIT_COMMIT="$Sha1: b447ba2$"
+GIT_COMMIT="$Sha1: 1ce2329$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<<$GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -1841,7 +1841,8 @@ function config_email_do() {
 				break
 			fi
 		else
-			break
+			logExit
+			return 0
 		fi
 	done
 
@@ -1879,7 +1880,7 @@ function config_email_do() {
 
 	local d="$(getMessageText $DESCRIPTION_MAIL_PROGRAM)"
 
-	ANSWER=$(whiptail --notags --radiolist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $WT_WIDTH 3 \
+	ANSWER=$(whiptail --radiolist "$d" --title "${tt[1]}" --ok-button "$o1" --cancel-button "$c1" $WT_HEIGHT $WT_WIDTH 3 \
 		"${m1[@]}" "$mail_" \
 		"${m2[@]}" "$ssmtp_" \
 		"${m3[@]}" "$msmtp_" \
