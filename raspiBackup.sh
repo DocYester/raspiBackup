@@ -56,13 +56,12 @@ IS_HOTFIX=$((! $? ))
 
 MYSELF=${0##*/}
 MYNAME=${MYSELF%.*}
-MYPID=$$
 
-GIT_DATE="$Date: 2019-04-09 18:38:47 +0200$"
+GIT_DATE="$Date: 2019-04-10 14:16:50 +0200$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<< $GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<< $GIT_DATE)
-GIT_COMMIT="$Sha1: 0526e6d$"
+GIT_COMMIT="$Sha1: 28039db$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<< $GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -88,8 +87,6 @@ SMILEY_VERSION_DEPRECATED=":-("
 DOWNLOAD_URL="$MYHOMEURL/downloads/raspibackup-sh/download"
 BETA_DOWNLOAD_URL="$MYHOMEURL/downloads/raspibackup-beta-sh/download"
 PROPERTY_URL="$MYHOMEURL/downloads/raspibackup0613-properties/download"
-VERSION_URL_EN="$MYHOMEURL/en/versionhistory"
-VERSION_URL_DE="$MYHOMEURL/de/versionshistorie"
 LATEST_TEMP_PROPERTY_FILE="/tmp/$MYNAME.properties"
 VAR_LIB_DIRECTORY="/var/lib/$MYNAME"
 RESTORE_REMINDER_FILE="restore.reminder"
@@ -150,12 +147,6 @@ declare -A LOG_OUTPUT_ARGs
 for K in "${!LOG_OUTPUTs[@]}"; do
 	k=$(tr '[:lower:]' '[:upper:]' <<< "${LOG_OUTPUTs[$K]}")
 	LOG_OUTPUT_ARGs[$k]="$K"
-done
-
-declare -A LOG_OUTPUT_ARG_REVERSEs
-for K in "${!LOG_OUTPUT_ARGs[@]}"; do
-	k="${LOG_OUTPUT_ARGs[$K]}"
-	LOG_OUTPUT_ARG_REVERSEs[$k]="$K"
 done
 
 POSSIBLE_LOG_LOCs=""
@@ -224,8 +215,6 @@ SHARED_BOOT_DIRECTORY=0
 
 BOOT_TAR_EXT="tmg"
 BOOT_DD_EXT="img"
-
-CTRLC_DETECTED=0
 
 # Commands used by raspiBackup and which have to be available
 # [command]=package
@@ -954,7 +943,7 @@ function getMessageText() {         # languageflag messagenumber parm1 parm2 ...
 	local msgPref="${msg:0:3}"
 	if [[ $msgPref == "RBK" ]]; then								# RBK0001E
 		local severity="${msg:7:1}"
-		[[ severity == "W" ]] && WARNING_MESSAGE_WRITTEN=1
+		[[ $severity == "W" ]] && WARNING_MESSAGE_WRITTEN=1
 		if [[ "$severity" =~ [EWI] ]]; then
 			local msgHeader=${MSG_HEADER[$severity]}
 			echo "$msgHeader $msg"
@@ -1540,7 +1529,7 @@ function substituteNumberArguments() {
 
 	logEntry
 
-	local ll lla lo lloa ml mla
+	local ll lla lo ml mla
 	if [[ ! "$LOG_LEVEL" =~ ^[0-9]$ ]]; then
 		ll=$(tr '[:lower:]' '[:upper:]'<<< $LOG_LEVEL)
 		lla=$(tr '[:lower:]' '[:upper:]'<<< ${LOG_LEVEL_ARGs[$ll]+abc})
@@ -1717,8 +1706,6 @@ function isVersionDeprecated() { # versionNumber
 	logEntry
 
 	local rc=1	# no/failure
-	local properties=""
-	local deprecated=""
 
 	local deprecatedVersions=( $DEPRECATED_PROPERTY )
 	if containsElement "$1" "${deprecatedVersions[@]}"; then
@@ -2060,8 +2047,8 @@ function isMounted() { # dir
 	local rc
 	logEntry "$1"
 	if [[ -n "$1" ]]; then
-		logItem $(cat /proc/mounts)
-		$(grep -qs "$1" /proc/mounts)
+		logItem "$(cat /proc/mounts)"
+		grep -qs "$1" /proc/mounts
 		rc=$?
 	else
 		rc=1
@@ -2550,7 +2537,6 @@ function cleanup() { # trap
 	if [[ $1 == "SIGINT" ]]; then
 		# ignore CTRL-C now
 		trap '' SIGINT SIGTERM EXIT
-		CTRLC_DETECTED=1
 		rc=$RC_CTRLC
 		writeToConsole $MSG_LEVEL_MINIMAL $MSG_CTRLC_DETECTED
 	fi
@@ -2988,7 +2974,7 @@ function partitionLayoutBackup() {
 
 		logEntry
 
-		local p partitionname rc
+		local p rc
 
 		writeToConsole $MSG_LEVEL_DETAILED $MSG_BACKUP_CREATING_PARTITION_INFO
 
@@ -3061,7 +3047,7 @@ function ddBackup() {
 
 	logEntry
 
-	local cmd verbose partition fakecmd cnt
+	local cmd verbose partition fakecmd
 
 	(( $VERBOSE )) && verbose="-v" || verbose=""
 
@@ -3218,7 +3204,7 @@ function tarBackup() {
 		executeCommand "$fakecmd"
 		rc=0
 	elif (( ! $FAKE )); then
-		executeCommand "${pvCmd}${cmd}" "$TAR_IGNORE_ERRORS"
+		executeCommand "${cmd}" "$TAR_IGNORE_ERRORS"
 		rc=$?
 	fi
 
@@ -3579,7 +3565,7 @@ function restore() {
 			logItem "parted $RESTORE_DEVICE print"
 			logItem "$(parted -s $RESTORE_DEVICE print 2>>$LOG_FILE)"
 
-			if [[ $RESTORE_DEVICE =~ "/dev/mmcblk0" || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+			if [[ $RESTORE_DEVICE == "/dev/mmcblk0" || $RESTORE_DEVICE == "/dev/loop" ]]; then
 				ROOT_DEVICE=$(sed -E 's/p[0-9]+$//' <<< $ROOT_PARTITION)
 			else
 				ROOT_DEVICE=$(sed -E 's/[0-9]+$//' <<< $ROOT_PARTITION)
@@ -3768,7 +3754,7 @@ function backup() {
 
 function mountSDPartitions() { # sourcePath
 
-	local partitition partitionName
+	local partition partitionName
 	logEntry
 
 	if (( ! $FAKE )); then
@@ -3787,7 +3773,7 @@ function mountSDPartitions() { # sourcePath
 
 function umountSDPartitions() { # sourcePath
 
-	local partitition partitionName
+	local partitionName
 	logEntry
 	if (( ! $FAKE )); then
 		logItem "BEFORE: mount $(mount)"
@@ -3927,7 +3913,7 @@ function collectPartitions() {
 
 	logItem "backupAllPartitions: $backupAllPartitions"
 
-	local mountline partition size type
+	local mountLine partition size type
 	while read line; do
 		if [[ $line =~ $regexPartitionLine ]]; then
 			partition=${BASH_REMATCH[1]}
@@ -4584,7 +4570,7 @@ function restoreNonPartitionBasedBackup() {
 		exitError $RC_PARAMETER_ERROR
 	fi
 
-	if [[ $RESTORE_DEVICE =~ /dev/mmcblk0 || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+	if [[ $RESTORE_DEVICE == "/dev/mmcblk0" || $RESTORE_DEVICE == "/dev/loop" ]]; then
 		BOOT_PARTITION="${RESTORE_DEVICE}p1"
 	else
 		BOOT_PARTITION="${RESTORE_DEVICE}1"
@@ -4593,7 +4579,7 @@ function restoreNonPartitionBasedBackup() {
 
 	ROOT_PARTITION_DEFINED=1
 	if [[ -z $ROOT_PARTITION ]]; then
-		if [[ $RESTORE_DEVICE =~ /dev/mmcblk0 || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+		if [[ $RESTORE_DEVICE == "/dev/mmcblk0" || $RESTORE_DEVICE == "/dev/loop" ]]; then
 			ROOT_PARTITION="${RESTORE_DEVICE}p2"
 		else
 			ROOT_PARTITION="${RESTORE_DEVICE}2"
@@ -4622,7 +4608,7 @@ function restoreNonPartitionBasedBackup() {
 	if (( ! $ROOT_PARTITION_DEFINED )); then
 		writeToConsole $MSG_LEVEL_MINIMAL $MSG_WARN_RESTORE_DEVICE_OVERWRITTEN $RESTORE_DEVICE
 	else
-		if [[ $ROOT_DEVICE =~ /dev/mmcblk0 || $ROOT_DEVICE =~ "/dev/loop" ]]; then
+		if [[ $ROOT_DEVICE == "/dev/mmcblk0" || $ROOT_DEVICE == "/dev/loop" ]]; then
 			ROOT_DEVICE=$(sed -E 's/p[0-9]+$//' <<< $ROOT_PARTITION)
 		else
 			ROOT_DEVICE=$(sed -E 's/[0-9]+$//' <<< $ROOT_PARTITION)
@@ -4653,7 +4639,7 @@ function restorePartitionBasedBackup() {
 
 	logEntry
 
-	local partition sourceSize targetSize
+	local partition sourceSDSize targetSDSize
 
 	if [[ "$BACKUPTYPE" != $BACKUPTYPE_DD && "$BACKUPTYPE" != $BACKUPTYPE_DDZ ]]; then
 		if [[ ! -e "$SF_FILE" ]]; then
@@ -4683,14 +4669,14 @@ function restorePartitionBasedBackup() {
 
 	if mount | grep -q $RESTORE_DEVICE; then
 		logItem "Umounting partitions on $RESTORE_DEVICE"
-		logItem $(mount | grep $RESTORE_DEVICE)
+		logItem "$(mount | grep $RESTORE_DEVICE)"
 		while read dev; do echo $dev | cut -d ' ' -f 1; done < <(mount | grep $RESTORE_DEVICE)  | xargs umount
-		logItem $(mount | grep $RESTORE_DEVICE)
+		logItem "$(mount | grep $RESTORE_DEVICE)"
 	fi
 
 	local sourceSDSize=$(calcSumSizeFromSFDISK "$SF_FILE")
 	local targetSDSize=$(blockdev --getsize64 $RESTORE_DEVICE)
-	logItem "SourceSDSize: $soureSDSize - targetSDSize: $targetSDSize"
+	logItem "SourceSDSize: $sourceSDSize - targetSDSize: $targetSDSize"
 
 	if (( targetSDSize < sourceSDSize )); then
 		writeToConsole $MSG_LEVEL_MINIMAL $MSG_TARGETSD_SIZE_TOO_SMALL "$RESTORE_DEVICE" "$(bytesToHuman $targetSDSize)" "$(bytesToHuman $sourceSDSize)"
@@ -4774,7 +4760,7 @@ function restorePartitionBasedBackup() {
 	sync
 
 	logItem "fdisk of $RESTORE_DEVICE"
-	logItem $(fdisk -l $RESTORE_DEVICE)
+	logItem "$(fdisk -l $RESTORE_DEVICE)"
 
 	logExit
 
@@ -4792,7 +4778,7 @@ function getBackupPartitionLabel() { # partition
 	logEntry "$1"
 
 	local partition=$1
-	local blkid matches label
+	local blkid label
 
 	blkid=$(grep $partition "$BLKID_FILE")
 	logItem "BLKID: $1 - $blkid"
@@ -4930,7 +4916,7 @@ function restorePartitionBasedPartition() { # restorefile
 	logEntry "$1"
 
 	rc=0
-	local verbose zip partitionFormat partitionLabel cmd
+	local verbose zip partitionLabel cmd
 
 	local restoreFile="$1"
 	local restorePartition="$(basename "$restoreFile")"
@@ -4954,7 +4940,7 @@ function restorePartitionBasedPartition() { # restorefile
 
 	local restoreDevice
 	restoreDevice=${RESTORE_DEVICE%dev%%}
-	[[ $restoreDevice =~ mmcblk0 || $restoreDevice =~ "loop" ]] && restoreDevice="${restoreDevice}p"
+	[[ $restoreDevice =~ mmcblk0 || $restoreDevice == "loop" ]] && restoreDevice="${restoreDevice}p"
 	logItem "RestoreDevice: $restoreDevice"
 
 	local mappedRestorePartition
@@ -5047,7 +5033,7 @@ function restorePartitionBasedPartition() { # restorefile
 			case $BACKUPTYPE in
 
 				$BACKUPTYPE_DD|$BACKUPTYPE_DDZ)
-					if [[ $BACKUPTYPE == $BACKUPTYPE_DD ]]; then
+					if [[ "$BACKUPTYPE" == "$BACKUPTYPE_DD" ]]; then
 						if (( $PROGRESS )); then
 							cmd="if=\"$restoreFile\" $DD_PARMS | pv -fs $(stat -c %s "$restoreFile") | dd of=$RESTORE_DEVICE bs=$DD_BLOCKSIZE"
 						else
@@ -5073,11 +5059,11 @@ function restorePartitionBasedPartition() { # restorefile
 					fi
 
 					pushd "$MNT_POINT" &>>"$LOG_FILE"
-					[[ $BACKUPTYPE == $BACKUPTYPE_TGZ ]] && zip="z" || zip=""
+					[[ "$BACKUPTYPE" == "$BACKUPTYPE_TGZ" ]] && zip="z" || zip=""
 					cmd="tar ${archiveFlags} -x${verbose}${zip}f \"$restoreFile\""
 
 					if (( $PROGRESS )); then
-						cmd="$pv -f $restoreFile | $cmd -"
+						cmd="pv -f $restoreFile | $cmd -"
 					fi
 					executeCommand "$cmd"
 					rc=$?
@@ -5199,7 +5185,7 @@ function doitRestore() {
 	fi
 
 	if ! (( $FAKE )); then
-		if [[ ! ( $RESTORE_DEVICE =~ ^/dev/mmcblk[0-9]$ ) && ! ( $RESTORE_DEVICE =~ "/dev/loop" ) ]]; then
+		if [[ ! ( $RESTORE_DEVICE =~ ^/dev/mmcblk[0-9]$ ) && ! ( $RESTORE_DEVICE == "/dev/loop" ) ]]; then
 			if ! [[ "$RESTORE_DEVICE" =~ ^/dev/[a-zA-Z]+$ ]] ; then
 				writeToConsole $MSG_LEVEL_MINIMAL $MSG_RESTOREDEVICE_IS_PARTITION
 				exitError $RC_PARAMETER_ERROR
@@ -5331,9 +5317,12 @@ function updateRestoreReminder() {
 	fi
 
 	# retrieve reminder state
-	local now=$(date +%Y%m)
-	local rf=( $(<$reminder_file) )
-	local diffMonths=$(calculateMonthDiff $now ${rf[0]} )
+	local now
+	now=$(date +%Y%m)
+	local rf
+	rf=( $(<$reminder_file) )
+	local diffMonths
+	diffMonths=$(calculateMonthDiff $now ${rf[0]} )
 
 	# check if reminder should be send
 	if (( $diffMonths >= $RESTORE_REMINDER_INTERVAL )); then
@@ -5376,7 +5365,7 @@ function synchronizeCmdlineAndfstab() {
 
 	local CMDLINE FSTAB newPartUUID oldPartUUID root_partition BOOT_MP ROOT_MP
 
-	if [[ $RESTORE_DEVICE =~ "/dev/mmcblk0" || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+	if [[ $RESTORE_DEVICE == "/dev/mmcblk0" || $RESTORE_DEVICE == "/dev/loop" ]]; then
 		root_partition=$(sed -E 's/p[0-9]+$//' <<< $ROOT_PARTITION)
 	else
 		root_partition=$(sed -E 's/[0-9]+$//' <<< $ROOT_PARTITION)
@@ -5674,7 +5663,7 @@ LINK_BOOTPARTITIONFILES=$DEFAULT_LINK_BOOTPARTITIONFILES
 LOG_LEVEL=$DEFAULT_LOG_LEVEL
 LOG_OUTPUT="$DEFAULT_LOG_OUTPUT"
 MAIL_ON_ERROR_ONLY=$DEFAULT_MAIL_ON_ERROR_ONLY
-MAIL_PROGRAM="$DEFAULT_EMAIL_PROGRAM"
+MAIL_PROGRAM="$DEFAULT_MAIL_PROGRAM"
 MSG_LEVEL=$DEFAULT_MSG_LEVEL
 NOTIFY_UPDATE=$DEFAULT_NOTIFY_UPDATE
 PARTITIONBASED_BACKUP=$DEFAULT_PARTITIONBASED_BACKUP
@@ -5716,7 +5705,6 @@ LANGUAGE=$DEFAULT_LANGUAGE
 
 # misc other vars
 
-ALTERNATE_DISCOVERY=0
 BACKUP_DIRECTORY_NAME=""
 BACKUPFILE=""
 BACKUP_STARTED=0
@@ -5766,10 +5754,6 @@ while (( "$#" )); do
 
 	-9|-9[-+])
 	  FAKE_BACKUPS=$(getEnableDisableOption "$1"); shift 1
-	  ;;
-
-	--alternatediscovery|--alternatediscovery[+-])
-	  ALTERNATE_DISCOVERY=$(getEnableDisableOption "$1"); shift 1
 	  ;;
 
 	-a)
@@ -6173,16 +6157,6 @@ writeToConsole $MSG_LEVEL_MINIMAL $MSG_STARTED "$HOSTNAME" "$MYSELF" "$VERSION" 
 (( $IS_DEV )) && writeToConsole $MSG_LEVEL_MINIMAL $MSG_INTRO_DEV_MESSAGE
 (( $IS_HOTFIX )) && writeToConsole $MSG_LEVEL_MINIMAL $MSG_INTRO_HOTFIX_MESSAGE
 
-fileParameter="$1"
-if [[ -n "$1" ]]; then
-	shift 1
-	if [[ ! -d "$fileParameter" && ! -f "$fileParameter" ]]; then
-		writeToConsole $MSG_LEVEL_MINIMAL $MSG_FILE_ARG_NOT_FOUND "$fileParameter"
-		exitError $RC_MISSING_FILES
-	else
-		fileParameter="$(readlink -f "$fileParameter")"
-	fi
-fi
 
 unusedParms="$@"
 
@@ -6219,7 +6193,7 @@ if (( $UPDATE_MYSELF )); then
 fi
 
 if (( $NO_YES_QUESTION )); then				# WARNING: dangerous option !!!
-	if [[ ! $RESTORE_DEVICE =~ "$YES_NO_RESTORE_DEVICE" ]]; then	# make sure we're not killing a disk by accident
+	if [[ ! $RESTORE_DEVICE =~ $YES_NO_RESTORE_DEVICE ]]; then	# make sure we're not killing a disk by accident
 		writeToConsole $MSG_LEVEL_MINIMAL $MSG_YES_NO_DEVICE_MISMATCH $RESTORE_DEVICE $YES_NO_RESTORE_DEVICE
 		exitError $RC_MISC_ERROR
 	fi
